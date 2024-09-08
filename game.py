@@ -37,7 +37,7 @@ class SokobanGame(MDScreen):
 
         # Add direction buttons
         button_layout = MDBoxLayout(orientation='horizontal', spacing="10dp", padding="10dp", size_hint=(1, None), height="100dp", pos_hint={'center_x': 0.5, 'y': 0})
-        
+
         left_button = MDIconButton(icon="assets/images/game/game_left_btn.png", on_press=lambda x: self.move('left'), size_hint=(None, None), size=(80, 80))
         right_button = MDIconButton(icon="assets/images/game/game_right_btn.png", on_press=lambda x: self.move('right'), size_hint=(None, None), size=(80, 80))
         up_button = MDIconButton(icon="assets/images/game/game_up_btn.png", on_press=lambda x: self.move('up'), size_hint=(None, None), size=(80, 80))
