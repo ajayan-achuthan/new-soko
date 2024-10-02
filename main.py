@@ -1,94 +1,88 @@
-from kivymd.app import MDApp
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import StringProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.lang import Builder
-from kivy.uix.button import Button
-from kivy.core.window import Window
-from kivymd.uix.list import OneLineIconListItem
-from kivymd.theming import ThemeManager
-from kivy.uix.gridlayout import GridLayout
-from kivymd.uix.button import MDRaisedButton
-from kivymd.uix.scrollview import MDScrollView
+from kivy.clock import Clock
+import os
+import importlib
+import sys
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from kivymd.app import MDApp
 
-class ImageButton(Button):
-    pass
+# Add the parent directory of 'ui' to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-class MainScreen(Screen):
-    theme_cls = ThemeManager()
-    theme_cls.theme_style = "Dark"
-    def start_game(self):
-        self.manager.current = 'new_game'
+class AppReloader(FileSystemEventHandler):
+    def __init__(self, reload_func):
+        self.reload_func = reload_func
 
-    def open_settings(self):
-        print("Settings opened")
+    def on_modified(self, event):
+        if event.src_path.endswith(('collections.py', 'collections.kv')):
+            Clock.schedule_once(lambda dt: self.reload_func(), 0.1)
 
-    def exit_game(self):
-        MDApp.get_running_app().stop()
+class HotReload(BoxLayout):
+    def __init__(self, **kwargs):
+        super(HotReload, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        self.app_container = BoxLayout()
+        self.add_widget(self.app_container)
+        self.current_app = None
+        Clock.schedule_once(self.load_app, 0)
 
-class NewGameScreen(Screen):
-    def on_enter(self):
-        app = App.get_running_app()
-        self.ids.container.clear_widgets()
-        icons_item = {
-            "Glucose": "circle",
-            "Medicine": "pill",
-            "Carbs": "food-apple",
-            "A1C": "water",
-            "Exercise": "run",
-            "Weight": "scale-bathroom"
-        }
-        for item_name, icon in icons_item.items():
-            if item_name == "Carbs":
-                item = IconListItem(text=item_name, icon=icon, bg_color=(1, 0.8, 0.2, 1))
-            else:
-                item = IconListItem(text=item_name, icon=icon, bg_color=(0.2, 0.2, 0.2, 1))
+        # Set up watchdog
+        self.observer = Observer()
+        self.observer.schedule(AppReloader(self.load_app), path='ui', recursive=False)
+        self.observer.start()
 
-            item.bind(on_release=app.show_levels('levels'))
-            # item.bind(on_release=lambda instance, x=item: self.manager.current : 'levels')
-            self.ids.container.add_widget(item)
+    def load_app(self, *args):
+        try:
+            # Clean up the previous app instance if it exists
+            if self.current_app:
+                self.current_app.on_stop()
+                self.current_app.root_window.remove_widget(self.current_app.root)
 
-class LevelScreen(Screen):
-    def on_enter(self):
-        grid_layout = GridLayout(cols=4, spacing=10, size_hint_y=None)
-        grid_layout.bind(minimum_height=grid_layout.setter('height'))
+            # Reload the KV file
+            Builder.unload_file('ui/collections.kv')
+            Builder.load_file('ui/collections.kv')
 
-        for i in range(1, 101):  # Create 100 buttons
-            button = MDRaisedButton(text=str(i), md_bg_color=(0, 0, 0, 1), theme_text_color="Custom", text_color=(1, 1, 1, 1), size_hint=(None, None), size=("40dp", "40dp"))
-            grid_layout.add_widget(button)
+            # Reload the Python module
+            module = importlib.import_module('ui.collections')
+            importlib.reload(module)
+            app_class = getattr(module, 'CollectionsApp')
 
-        scroll_view = MDScrollView()
-        scroll_view.add_widget(grid_layout)
+            # Create a new app instance
+            app_instance = app_class()
+            app_instance.load_all_kv_files(app_instance.kv_directory)
+            root_widget = app_instance.build()
+            if root_widget is None:
+                print("Error: build() method returned None")
+                return
 
-        self.add_widget(scroll_view)
+            self.app_container.clear_widgets()
+            self.app_container.add_widget(root_widget)
 
-class GameScreen(Screen):
-    pass
+            # Call on_start method
+            Clock.schedule_once(lambda dt: app_instance.on_start())
 
-class GameCompleted(Screen):
-    pass
+            self.current_app = app_instance
+            print("App reloaded successfully")
+        except Exception as e:
+            print(f"Error loading app: {e}")
+            import traceback
+            traceback.print_exc()
 
-class IconListItem(OneLineIconListItem):
-    icon = StringProperty()
+    def on_stop(self):
+        if self.current_app:
+            self.current_app.on_stop()
+        self.observer.stop()
+        self.observer.join()
 
-class CollectionsApp(MDApp):
+class HotReloadApp(MDApp):
     def build(self):
-        Builder.load_file('collections.kv')
-        sm = ScreenManager()
-        sm.add_widget(MainScreen(name='main'))
-        sm.add_widget(NewGameScreen(name='new_game'))
-        sm.add_widget(LevelScreen(name='levels'))
-        sm.add_widget(GameScreen(name='game'))
-        sm.add_widget(GameCompleted(name='complete'))
-        return sm
+        return HotReload()
 
-    def show_levels(self, instance):
-        self.collection = "collection"
-        # self.no_levels = utils.count_levels(collection)
-        self.root.current = 'levels'
-
-    def new_game(self, instance):
-        self.root.current = 'new_game'
+    def on_stop(self):
+        self.root.on_stop()
 
 if __name__ == '__main__':
-    CollectionsApp().run()
+    HotReloadApp().run()

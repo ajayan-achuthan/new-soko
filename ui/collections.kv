@@ -1,0 +1,136 @@
+#:import md_icons kivymd.icon_definitions.md_icons
+
+<ImageButton>:
+    background_normal: ''
+    background_down: ''
+    background_color: (1,1,1,1)
+    canvas.before:
+        Color:
+            rgba: (1,1,1,1)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: self.background_normal if self.state == 'normal' else self.background_down
+
+<MainScreen>:
+    md_bg_color: 0, 0, 0, 1
+    FitImage:
+        source: 'assets/images/new_game/main_bg.png'
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: "20dp"
+        spacing: "20dp"
+
+        Widget:
+            size_hint_y: 0.6
+
+        MDFillRoundFlatButton:
+            text: "Start Game"
+            font_size: "18sp"
+            size_hint: 0.8, None
+            height: "56dp"
+            pos_hint: {"center_x": 0.5}
+            md_bg_color: 0, 0, 0, 0
+            elevation: 0
+            on_release: app.start_game(self)
+            Image:
+                source: 'assets/images/new_game/main_start_btn.png'
+                size: self.parent.size
+                pos: self.parent.pos
+                allow_stretch: True
+                keep_ratio: True
+
+        MDBoxLayout:
+            spacing: "20dp"
+            size_hint: 0.8, None
+            height: "56dp"
+            pos_hint: {"center_x": 0.5}
+
+            MDFillRoundFlatButton:
+                text: "Settings"
+                font_size: "16sp"
+                size_hint_x: 0.5
+                md_bg_color: 0, 0, 0, 0
+                elevation: 0
+                on_release: app.open_settings()
+                Image:
+                    source: 'assets/images/new_game/main_settings_btn.png'
+                    size: self.parent.size
+                    pos: self.parent.pos
+                    allow_stretch: True
+                    keep_ratio: False
+
+            MDFillRoundFlatButton:
+                text: "Exit"
+                font_size: "16sp"
+                size_hint_x: 0.5
+                md_bg_color: 0, 0, 0, 0
+                elevation: 0
+                on_release: app.exit_app()
+                Image:
+                    source: 'assets/images/new_game/main_exit_btn.png'
+                    size: self.parent.size
+                    pos: self.parent.pos
+                    allow_stretch: True
+                    keep_ratio: False
+
+        Widget:
+            size_hint_y: 0.2
+
+<IconListItem>:
+    theme_text_color: "Custom"
+    text_color: 1, 1, 1, 1
+    radius: [15, 15, 15, 15]
+    IconLeftWidget:
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: 1, 1, 1, 1
+
+<NewGameScreen>:
+    theme_text_color: "Custom"
+    text_color: 1, 1, 1, 1
+    md_bg_color: 0, 0, 0, 1  # Set the background color to black
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: "8dp"
+        padding: "16dp"
+
+        MDLabel:
+            text: "Collections"
+            font_style: "H4"
+            bold: True
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            halign: "left"
+            size_hint_y: None
+            height: self.texture_size[1]
+            padding_y: 20
+
+        MDScrollView:
+            MDList:
+                id: container
+                spacing: "8dp"
+                padding: "8dp"
+
+        MDIconButton:
+            icon: "close"
+            pos_hint: {"center_x": .5}
+            theme_text_color: "Custom"
+            text_color: 0.5, 0.5, 0.5, 1
+            on_release: root.manager.current = 'main'
+
+<LevelScreen>:
+    MDLabel:
+        text: "Level Screen"
+        halign: "center"
+
+<GameScreen>:
+    MDLabel:
+        text: "Game Screen"
+        halign: "center"
+
+<GameCompleted>:
+    MDLabel:
+        text: "Game Completed"
+        halign: "center"

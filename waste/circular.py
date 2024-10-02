@@ -5,7 +5,7 @@ from kivy.uix.label import Label
 from kivy.clock import Clock
 
 
-class CircularProgressBar(Widget):
+class CircularProgressBar((Widget)):
     def __init__(self, **kwargs):
         super(CircularProgressBar, self).__init__(**kwargs)
         self.percentage = 0  # Initial percentage

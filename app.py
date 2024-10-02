@@ -22,7 +22,7 @@ MDScreen:
         spacing: dp(10)
 
         MDLabel:
-            text: "Collections"
+            text: "Collectiona"
             halign: "left"
             font_style: "H4"
             theme_text_color: "Custom"
@@ -38,7 +38,7 @@ MDScreen:
 
 <ClassicButton>:
     size_hint: 1, None
-    height: dp(200)
+    height: dp(500)
     md_bg_color: 0.2, 0.4, 0.2, 1
     theme_text_color: "Custom"
     text_color: 0.8, 1, 0.2, 1
@@ -53,7 +53,7 @@ MDScreen:
             orientation: "vertical"
             size_hint_x: 0.9
             MDLabel:
-                text: "Classic"
+                text: "Classics"
                 halign: "left"
                 theme_text_color: "Custom"
                 text_color: 0.8, 1, 0.2, 1
